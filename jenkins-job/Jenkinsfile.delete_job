@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    environment {
+        KUBE_CONFIG = 'kube-config'
+    }
+
+    parameters {
+        string(name: 'NAMESPACE', defaultValue: '', description: 'Branch of the genai service repository to build')
+    }
+
+    stages {
+        stage('Check parameters') {
+            steps {
+                script {
+                    if (!params.'NAMESPACE') {
+                        error 'Namespace is not set, nothing to delete. Cancel pipeline execution!'
+                        env.skipPipeline = 'true'
+                    }
+                }
+            }
+        }
+        stage('Delete deployment namespace') {
+            when {
+                expression { env.skipPipeline != 'true' }
+            }
+            steps {
+                script {
+                    def namespace = params.'NAMESPACE'
+                    echo "Deleting namespace ${namespace}"
+
+                    withCredentials([
+                        file(credentialsId: KUBE_CONFIG, variable: 'KUBE_CONFIG_FILE')
+                    ]) {
+                        sh """
+                            kubectl delete ns ${namespace} --ignore-not-found=true --kubeconfig=${KUBE_CONFIG_FILE}
+                        """
+                    }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "Namespace '${params.NAMESPACE}' deletion triggered."
+        }
+        failure {
+            echo "Failed to delete namespace '${params.NAMESPACE}'."
+        }
+    }
+}   

@@ -6,7 +6,7 @@ pipeline {
         CONFIG_REPO = 'https://github.com/ltt204/spring-petclinic-config.git'
         DEFAULT_TAG = 'latest'
         DEFAULT_BRANCH = 'main'
-        NAMESPACE = 'dev'
+        NAMESPACE_PREFIX = 'dev-'
 
         KUBE_CONFIG = 'kube-config'
     }
@@ -16,6 +16,11 @@ pipeline {
         string(name: 'vets-service', defaultValue: '', description: 'Branch of the vets service repository to build')
         string(name: 'visits-service', defaultValue: '', description: 'Branch of the visets service repository to build')
         string(name: 'genai-service', defaultValue: '', description: 'Branch of the genai service repository to build')
+        string(
+            name: 'cleanup_delay',
+            defaultValue: '0',
+            description: 'Delay in seconds before cleaning up the deployment namespace. Set to 0 to skip cleanup.'
+        )
     }
 
     stages {
@@ -80,6 +85,8 @@ pipeline {
                                 tag = DEFAULT_TAG
                             } else {
                                 tag = sh(script: "git rev-parse --short --verify origin/${branch}", returnStdout: true).trim()
+                                env.BRANCH_NAME = branch
+                                env.BRANCH_TAG = tag
                             }
 
                             def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
@@ -101,7 +108,9 @@ pipeline {
                     def charRoot = 'dev_config/helm-chart'
                     def charPath = "${charRoot}/dev"
 
-                    echo "Deploying with branches: customers-service=${params.'customers-service'}, vets-service=${params.'vets-service'}, visits-service=${params.'visits-service'}, genai-service=${params.'genai-service'} into ${NAMESPACE} namespace"
+                    env.DEPLOYMENT_NAMESPACE = "${NAMESPACE_PREFIX}${env.BRANCH_NAME ?: 'default'}-${env.BRANCH_TAG ?: DEFAULT_TAG}"
+
+                    echo "Deploying with branches: customers-service=${params.'customers-service'}, vets-service=${params.'vets-service'}, visits-service=${params.'visits-service'}, genai-service=${params.'genai-service'} into ${env.DEPLOYMENT_NAMESPACE} namespace"
                 
                     def branches = [
                         'customers-service': params.'customers-service',
@@ -124,12 +133,53 @@ pipeline {
                             kubectl config view
 
                             helm upgrade --install petclinic-dev ${charPath} \\
-                                --namespace ${NAMESPACE} --create-namespace\\
+                                --namespace ${env.DEPLOYMENT_NAMESPACE} --create-namespace\\
                                 -f $charPath/values.yaml \\
                                 ${imageTags}
                         """
                     }
                 }
+            }
+        }
+
+        stage('Cleanup deployment namespace') {
+            when {
+                expression { env.skipPipeline != 'true' && params.cleanup_delay.toInteger() > 0 }
+            }
+            steps {
+                script {
+                    echo "Scheduling cleanup deployment in ${params.cleanup_delay} seconds"
+
+                    build job: 'clean_deployment', 
+                        parameters: [
+                            string(name: 'NAMESPACE', value: "${env.DEPLOYMENT_NAMESPACE}"),
+                        ], 
+                        wait: false,
+                        quietPeriod: params.cleanup_delay.toInteger()
+
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.skipPipeline == 'true') {
+                    echo 'Pipeline execution was skipped due to missing parameters.'
+                } else {
+                    echo 'Pipeline execution completed.'
+                }
+            }
+        }
+        success {
+            script {
+                echo 'Pipeline completed successfully.'
+            }
+        }
+        failure {
+            script {
+                echo 'Pipeline failed.'
             }
         }
     }
