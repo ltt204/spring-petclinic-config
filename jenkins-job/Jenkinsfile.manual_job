@@ -7,6 +7,8 @@ pipeline {
         DEFAULT_TAG = 'latest'
         DEFAULT_BRANCH = 'main'
         NAMESPACE = 'dev'
+
+        KUBE_CONFIG = 'kube-config'
     }
 
     parameters {
