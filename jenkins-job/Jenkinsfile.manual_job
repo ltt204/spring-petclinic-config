@@ -85,7 +85,7 @@ pipeline {
                                 tag = DEFAULT_TAG
                             } else {
                                 tag = sh(script: "git rev-parse --short --verify origin/${branch}", returnStdout: true).trim()
-                                env.BRANCH_NAME = branch
+                                env.BRANCH_NAME = branch.replaceAll('_', '-').trim()
                                 env.BRANCH_TAG = tag
                             }
 
