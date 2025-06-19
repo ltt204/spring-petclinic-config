@@ -97,6 +97,13 @@ pipeline {
                 expression { env.skipPipeline != 'true' }
             }
             steps {
+                sh '''
+                    export KUBECONFIG=$KUBE_CONFIG_FILE
+                    echo "Effective kubeconfig:"
+                    kubectl config view
+                    echo "Trying to get cluster version:"
+                    kubectl version --short
+                '''
                 script {
                     def charRoot = 'dev_config/helm-chart'
                     def charPath = "${charRoot}/dev"
@@ -118,9 +125,6 @@ pipeline {
                     withCredentials([
                         file(credentialsId: KUBE_CONFIG, variable: 'KUBE_CONFIG_FILE')
                     ]) {
-                        sh '''
-                            export KUBECONFIG=$KUBE_CONFIG_FILE
-                        '''
                         sh """
                             helm upgrade --install petclinic-dev ${charPath} \\
                                 --namespace ${NAMESPACE} --create-namespace\\
