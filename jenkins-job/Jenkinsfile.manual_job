@@ -150,7 +150,7 @@ pipeline {
                 script {
                     echo "Scheduling cleanup deployment in ${params.cleanup_delay} seconds"
 
-                    build job: 'clean_deployment', 
+                    build job: 'cleanup_deployment', 
                         parameters: [
                             string(name: 'NAMESPACE', value: "${env.DEPLOYMENT_NAMESPACE}"),
                         ], 
