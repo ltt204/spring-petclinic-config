@@ -118,14 +118,14 @@ pipeline {
                     withCredentials([
                         file(credentialsId: KUBE_CONFIG, variable: 'KUBE_CONFIG_FILE')
                     ]) {
-                        sh """
+                        sh '''
                             export KUBECONFIG=$KUBE_CONFIG_FILE
-                            helm upgrade --install petclinic-dev ${charPath} \\
-                                --namespace ${NAMESPACE} --create-namespace\\
-                                -f ${charPath}/values.yaml \\
-                                ${imageTags}
+                            helm upgrade --install petclinic-dev $charPath \\
+                                --namespace $NAMESPACE --create-namespace\\
+                                -f $charPath/values.yaml \\
+                                $imageTags
                                 --debug
-                        """
+                        '''
                     }
                 }
             }
