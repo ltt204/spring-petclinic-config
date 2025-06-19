@@ -120,12 +120,14 @@ pipeline {
                     ]) {
                         sh '''
                             export KUBECONFIG=$KUBE_CONFIG_FILE
-                            helm upgrade --install petclinic-dev $charPath \\
-                                --namespace $NAMESPACE --create-namespace\\
-                                -f $charPath/values.yaml \\
-                                $imageTags
-                                --debug
                         '''
+                        sh """
+                            helm upgrade --install petclinic-dev ${charPath} \\
+                                --namespace ${NAMESPACE} --create-namespace\\
+                                -f $charPath/values.yaml \\
+                                ${imageTags}
+                                --debug
+                        """
                     }
                 }
             }
