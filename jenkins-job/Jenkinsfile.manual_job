@@ -35,8 +35,8 @@ pipeline {
             steps {
                 dir('dev_config') {
                     script {
-                        echo "Checking out configuration repository ${CONFIG_REPO}"
-                        sh "git clone ${CONFIG_REPO}"
+                        git url: "${CONFIG_REPO}", branch: 'main', changelog: false, poll: false
+                        sh 'git fetch --all --prune --quiet'
                     }
                 }
             }
@@ -47,13 +47,10 @@ pipeline {
                 expression { env.skipPipeline != 'true' }
             }
             steps {
-                dir('spring-petclinic-microservices') {
+                dir('dev_repo') {
                     script {
-                        echo "Checking out repository ${REPOPSITORY_URL}"
-                        sh "git clone ${REPOPSITORY_URL}"
-
-                        echo "Fetching all branches from ${REPOPSITORY_URL}"
-                        sh 'git fetch --all'
+                        git url: "${REPOPSITORY_URL}", branch: 'main', changelog: false, poll: false
+                        sh 'git fetch --all --prune --quiet'
                     }
                 }
             }
@@ -64,7 +61,7 @@ pipeline {
                 expression { env.skipPipeline != 'true' }
             }
             steps {
-                dir ('spring-petclinic-microservices') {
+                dir ('dev_repo') {
                     script {
                         def branches = [
                             'customers-service': params.'customers-service' ?: DEFAULT_BRANCH,
