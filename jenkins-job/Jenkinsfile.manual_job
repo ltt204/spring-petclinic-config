@@ -5,14 +5,15 @@ pipeline {
         REPOPSITORY_URL = 'https://github.com/ltt204/spring-petclinic-microservices.git'
         CONFIG_REPO = 'https://github.com/ltt204/spring-petclinic-config.git'
         DEFAULT_TAG = 'latest'
+        DEFAULT_BRANCH = 'main'
         NAMESPACE = 'dev'
     }
 
     parameters {
-        string(name: 'customers-service', defaultValue: 'main', description: 'Branch of the customers service repository to build')
-        string(name: 'vets-service', defaultValue: 'main', description: 'Branch of the vets service repository to build')
-        string(name: 'visits-service', defaultValue: 'main', description: 'Branch of the visets service repository to build')
-        string(name: 'genai-service', defaultValue: 'main', description: 'Branch of the genai service repository to build')
+        string(name: 'customers-service', defaultValue: '', description: 'Branch of the customers service repository to build')
+        string(name: 'vets-service', defaultValue: '', description: 'Branch of the vets service repository to build')
+        string(name: 'visits-service', defaultValue: '', description: 'Branch of the visets service repository to build')
+        string(name: 'genai-service', defaultValue: '', description: 'Branch of the genai service repository to build')
     }
 
     stages {
@@ -58,15 +59,15 @@ pipeline {
             steps {
                 script {
                     def branches = [
-                        'customers-service': params.'customers-service',
-                        'vets-service': params.'vets-service',
-                        'visits-service': params.'visits-service',
-                        'genai-service': params.'genai-service'
+                        'customers-service': params.'customers-service' ?: DEFAULT_BRANCH,
+                        'vets-service': params.'vets-service' ?: DEFAULT_BRANCH,
+                        'visits-service': params.'visits-service' ?: DEFAULT_BRANCH,
+                        'genai-service': params.'genai-service' ?: DEFAULT_BRANCH
                     ]
                     
                     def tag
 
-                    branhes.each { service, branch ->
+                    branches.each { service, branch ->
                         echo "Resolving commit hash for ${service} branch ${branch}"
                         if (branch == 'main') {
                             tag = DEFAULT_TAG
