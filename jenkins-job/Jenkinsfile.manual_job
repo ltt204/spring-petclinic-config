@@ -99,13 +99,7 @@ pipeline {
                     def charRoot = 'dev_config/helm-chart'
                     def charPath = "${charRoot}/dev"
 
-                    echo """
-                    Deploying with branches: 
-                        customers-service=${params.'customers-service'}, 
-                        vets-service=${params.'vets-service'}, 
-                        visits-service=${params.'visits-service'}, 
-                        genai-service=${params.'genai-service'} into ${NAMESPACE} namespace
-                    """
+                    echo "Deploying with branches: customers-service=${params.'customers-service'}, vets-service=${params.'vets-service'}, visits-service=${params.'visits-service'}, genai-service=${params.'genai-service'} into ${NAMESPACE} namespace"
                 
                     def branches = [
                         'customers-service': params.'customers-service',
@@ -115,8 +109,8 @@ pipeline {
                     ]
                     
                     def imageTags = branches.collectEntries { service, branch ->
-                        def tag = envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
-                        "--set images.${service}.tag =${env[tag]}"
+                        def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
+                        "--set images.${service}.tag =${env[envVar]}"
                     }.join(' ')
 
                     sh """
