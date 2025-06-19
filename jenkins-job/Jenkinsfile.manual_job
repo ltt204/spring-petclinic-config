@@ -1,5 +1,5 @@
 pipeline {
-    agent docker
+    agent any
 
     environment {
         REPOPSITORY_URL = 'https://github.com/ltt204/spring-petclinic-microservices.git'
