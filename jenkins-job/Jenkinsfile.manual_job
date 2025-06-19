@@ -64,10 +64,10 @@ pipeline {
                 dir ('dev_repo') {
                     script {
                         def branches = [
-                            'customers-service': params.'customers-service' ?: DEFAULT_BRANCH,
-                            'vets-service': params.'vets-service' ?: DEFAULT_BRANCH,
-                            'visits-service': params.'visits-service' ?: DEFAULT_BRANCH,
-                            'genai-service': params.'genai-service' ?: DEFAULT_BRANCH
+                            'customers-service' : params.'customers-service'    ?: DEFAULT_BRANCH,
+                            'vets-service'      : params.'vets-service'         ?: DEFAULT_BRANCH,
+                            'visits-service'    : params.'visits-service'       ?: DEFAULT_BRANCH,
+                            'genai-service'     : params.'genai-service'        ?: DEFAULT_BRANCH
                         ]
                         
                         def tag
@@ -108,7 +108,7 @@ pipeline {
                         'genai-service': params.'genai-service'
                     ]
                     
-                    def imageTags = branches.collectEntries { service, branch ->
+                    def imageTags = branches.collect { service, branch ->
                         def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
                         "--set images.${service}.tag =${env[envVar]}"
                     }.join(' ')
