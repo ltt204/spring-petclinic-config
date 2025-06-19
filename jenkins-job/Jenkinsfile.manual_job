@@ -34,8 +34,10 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Checking out configuration repository ${CONFIG_REPO}"
-                    sh "git clone ${CONFIG_REPO} dev_config"
+                    dir('dev_config') {
+                        echo "Checking out configuration repository ${CONFIG_REPO}"
+                        sh "git clone ${CONFIG_REPO} ."
+                    }
                 }
             }
         }
@@ -46,8 +48,13 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Checking out repository ${REPOPSITORY_URL}"
-                    sh "git clone ${REPOPSITORY_URL} repo"
+                    dir('spring-petclinic-microservices') {
+                        echo "Checking out repository ${REPOPSITORY_URL}"
+                        sh "git clone ${REPOPSITORY_URL} ."
+
+                        echo "Fetching all branches from ${REPOPSITORY_URL}"
+                        sh 'git fetch --all'
+                    }
                 }
             }
         }
@@ -58,26 +65,28 @@ pipeline {
             }
             steps {
                 script {
-                    def branches = [
-                        'customers-service': params.'customers-service' ?: DEFAULT_BRANCH,
-                        'vets-service': params.'vets-service' ?: DEFAULT_BRANCH,
-                        'visits-service': params.'visits-service' ?: DEFAULT_BRANCH,
-                        'genai-service': params.'genai-service' ?: DEFAULT_BRANCH
-                    ]
-                    
-                    def tag
+                    dir ('spring-petclinic-microservices') {
+                        def branches = [
+                            'customers-service': params.'customers-service' ?: DEFAULT_BRANCH,
+                            'vets-service': params.'vets-service' ?: DEFAULT_BRANCH,
+                            'visits-service': params.'visits-service' ?: DEFAULT_BRANCH,
+                            'genai-service': params.'genai-service' ?: DEFAULT_BRANCH
+                        ]
+                        
+                        def tag
 
-                    branches.each { service, branch ->
-                        echo "Resolving commit hash for ${service} branch ${branch}"
-                        if (branch == 'main') {
-                            tag = DEFAULT_TAG
-                        } else {
-                            tag = sh(script: "git rev-parse --short --verify origin/${branch}", returnStdout: true).trim()
+                        branches.each { service, branch ->
+                            echo "Resolving commit hash for ${service} branch ${branch}"
+                            if (branch == 'main') {
+                                tag = DEFAULT_TAG
+                            } else {
+                                tag = sh(script: "git rev-parse --short --verify origin/${branch}", returnStdout: true).trim()
+                            }
+
+                            def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
+                            env[envVar] = tag
+                            echo "Resolved ${service} tag: ${env[envVar]}"
                         }
-
-                        def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
-                        env[envVar] = tag
-                        echo "Resolved ${service} tag: ${env[envVar]}"
                     }
                 }
             }
