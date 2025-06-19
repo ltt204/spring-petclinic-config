@@ -36,7 +36,7 @@ pipeline {
                 script {
                     dir('dev_config') {
                         echo "Checking out configuration repository ${CONFIG_REPO}"
-                        sh "git clone ${CONFIG_REPO} ."
+                        sh "git clone ${CONFIG_REPO}"
                     }
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
                 script {
                     dir('spring-petclinic-microservices') {
                         echo "Checking out repository ${REPOPSITORY_URL}"
-                        sh "git clone ${REPOPSITORY_URL} ."
+                        sh "git clone ${REPOPSITORY_URL}"
 
                         echo "Fetching all branches from ${REPOPSITORY_URL}"
                         sh 'git fetch --all'
