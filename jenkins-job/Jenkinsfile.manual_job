@@ -110,15 +110,15 @@ pipeline {
                     
                     def imageTags = branches.collect { service, branch ->
                         def envVar = "${service.toUpperCase().replace('-', '_')}_TAG"
-                        "--set images.${service}.tag =${env[envVar]}"
+                        "--set images.${service}.tag=${env[envVar]}"
                     }.join(' ')
 
                     sh """
                         helm upgrade --install petclinic-dev ${charPath} \\
-                            --namespace ${NAMESPACE} \\
+                            --namespace ${NAMESPACE} --create-namespace\\
                             -f ${charPath}/values.yaml \\
-                            --set namespace=${NAMESPACE} \\
                             ${imageTags}
+                            --debug
                     """
                 }
             }
