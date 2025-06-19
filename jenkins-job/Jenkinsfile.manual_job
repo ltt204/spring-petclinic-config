@@ -7,6 +7,8 @@ pipeline {
         DEFAULT_TAG = 'latest'
         DEFAULT_BRANCH = 'main'
         NAMESPACE = 'dev'
+
+        KUBE_CONFIG = 'kube-config'
     }
 
     parameters {
@@ -113,13 +115,16 @@ pipeline {
                         "--set images.${service}.tag=${env[envVar]}"
                     }.join(' ')
 
-                    sh """
-                        helm upgrade --install petclinic-dev ${charPath} \\
-                            --namespace ${NAMESPACE} --create-namespace\\
-                            -f ${charPath}/values.yaml \\
-                            ${imageTags}
-                            --debug
-                    """
+                    withCredential([file(credentialsId: KUBE_CONFIG, variable: 'KUBE_CONFIG_FILE')]) {
+                        sh """
+                            export KUBECONFIG=${KUBE_CONFIG_FILE}
+                            helm upgrade --install petclinic-dev ${charPath} \\
+                                --namespace ${NAMESPACE} --create-namespace\\
+                                -f ${charPath}/values.yaml \\
+                                ${imageTags}
+                                --debug
+                        """
+                    }
                 }
             }
         }
