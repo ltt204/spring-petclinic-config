@@ -1,0 +1,56 @@
+{{- range $name, $config := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $config.containerName }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: {{ $config.containerName }}
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $config.containerName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $config.containerName }}
+    spec:
+      {{- if $config.dependOnConfigServer }}
+      initContainers:
+        - name: wait-for-config-server
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - >
+              until curl -I http://config-server:8888;
+              do echo "waiting for config server..."; sleep 5;
+              done
+      {{- end }}
+      containers:
+        - name: {{ $config.containerName }}
+          image: {{ index $.Values.images $name "image" }}:{{ index $.Values.images $name "tag" }}
+          imagePullPolicy: {{ $.Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $config.port }}
+          env:
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: {{ $config.containerName }}
+            - name: SERVICE_NAME
+              value: {{ $config.containerName }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              memory: "300Mi" 
+            requests:
+              memory: "100Mi"
+{{- end }}

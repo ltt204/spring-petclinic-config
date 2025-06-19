@@ -1,0 +1,95 @@
+replicaCount: 1
+namespace: dev
+
+images:
+  config-server:
+    image: trongtinly1202/spring-petclinic-config-server
+    tag: latest
+    
+  customers-service:
+    image: trongtinly1202/spring-petclinic-customers-service
+    tag: latest
+
+  discovery-server:
+    image: trongtinly1202/spring-petclinic-discovery-server
+    tag: latest
+
+  visits-service:
+    image: trongtinly1202/spring-petclinic-visits-service
+    tag: latest
+
+  vets-service:
+    image: trongtinly1202/spring-petclinic-vets-service
+    tag: latest
+
+  genai-service:
+    image: trongtinly1202/spring-petclinic-genai-service
+    tag: latest
+
+  api-gateway:
+    image: trongtinly1202/spring-petclinic-api-gateway
+    tag: latest
+
+  admin-server:
+    image: trongtinly1202/spring-petclinic-admin-server
+    tag: latest
+
+
+services:
+  config-server:
+    containerName: config-server
+    port: 8888
+    metrics: "false"
+    
+  customers-service:
+    containerName: customers-service
+    port: 8081
+    dependOnConfigServer: true
+    metrics: "true"
+
+  discovery-server:
+    containerName: discovery-server
+    port: 8761
+    dependOnConfigServer: true
+    metrics: "true"
+
+  visits-service:
+    containerName: visits-service
+    port: 8082
+    dependOnConfigServer: true
+    metrics: "true"
+
+  vets-service:
+    containerName: vets-service
+    port: 8083
+    dependOnConfigServer: true
+    metrics: "true"
+
+  api-gateway:
+    containerName: api-gateway
+    port: 8080
+    dependOnConfigServer: true
+    metrics: "true"
+
+  admin-server:
+    containerName: admin-server
+    port: 9090
+    dependOnConfigServer: true
+    metrics: "true"
+
+podAnnotations: {}
+
+imagePullPolicy: IfNotPresent
+
+# service:
+#   type: ClusterIP
+#   port: 80
+
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
